@@ -7,6 +7,10 @@ pygame.init()
 
 # Fontes
 fonteStatus = pygame.font.SysFont('Unispace', 30)
+fontePontos = pygame.font.SysFont('Unispace', 40)
+fonteMenu2 = pygame.font.SysFont('Unispace', 50)
+fonteMenu = pygame.font.SysFont('Unispace', 70)
+fonteTitulo = pygame.font.SysFont('Unispace', 80)
 
 # Cores
 purple = (101,57,163)
@@ -37,6 +41,11 @@ bonusLaser_dmg = 0
 bonusCanhao_dmg = 0
 laserCooldown = 0
 canhaoCooldowm = 0
+
+inimigos = []
+level = 0
+wave_length = 0
+pontos = 0
 
 
 class Nave(pygame.sprite.Sprite):
@@ -112,7 +121,8 @@ class Tiro(pygame.sprite.Sprite):
     
   def update(self):
     global bonusLaser_dmg
-    global bonusCanhao_dmg 
+    global bonusCanhao_dmg
+    global pontos
 
     # atira
     self.rect.x += self.speed
@@ -130,13 +140,12 @@ class Tiro(pygame.sprite.Sprite):
         print('Enemy HP: ', inimigo.life)
         if inimigo.life <= 0:
           inimigos.remove(inimigo)
+          pontos += 1
           # concede um bonus por abate
           bonusLaser_dmg += 2 
           bonusCanhao_dmg += 10
 
 def status_tela(mensagem, cor, x, y):
-  global texto
-    
   texto = fonteStatus.render(mensagem, 1, cor)
   janela.blit(texto, (x, y))
 
@@ -146,6 +155,46 @@ tiro_group = pygame.sprite.Group()
 # personagens
 player = Nave('player', '00', 350, 350, 7, 0, 75)
 
+def mensagem_tela(mensagem, cor):
+  pygame.time.delay(1000)
+  janela.fill(black)
+  texto = fonteMenu.render(mensagem, 1, cor)
+  janela.blit(texto, ((largura/2 - texto.get_width()/2), (altura/2 - texto.get_height()/2)))
+  pygame.display.update()
+  pygame.time.delay(5000)
+
+def main_menu():
+  global level 
+  global wave_length 
+  global pontos 
+
+  janela.fill(black)
+
+  inimigos.clear()
+  level = 0
+  wave_length = 0
+  pontos = 0
+
+  # Setup do looping do jogo
+  FPS = 60
+  clock = pygame.time.Clock()
+  rodando = True
+
+  while rodando:
+      clock.tick(FPS)
+      
+      botaoJogar = fonteMenu.render('Jogar', 1, white)
+      janela.blit(botaoJogar, ((largura/2 - botaoJogar.get_width()/2), (altura/2 - botaoJogar.get_height()/2)))
+      pygame.display.update()
+
+      for event in pygame.event.get():
+          if event.type == pygame.QUIT:
+              pygame.quit()
+          if event.type == pygame.MOUSEBUTTONDOWN:
+              menu_mouse_x, menu_mouse_y = pygame.mouse.get_pos()
+              if 760 > menu_mouse_x > 615 and 390 > menu_mouse_y > 360:
+                  main()
+
 def main():
   global inimigos
   global move_left
@@ -154,6 +203,9 @@ def main():
   global move_down
   global shoot
   global troca
+  global level
+  global wave_length
+  global pontos
 
 # FPS
   FPS = 60
@@ -174,10 +226,6 @@ def main():
     tiro_group.update()
     tiro_group.draw(janela)
 
-    inimigos = []
-    level = 0
-    wave_length = 0
-
     if shoot:
       player.shoot()
 
@@ -192,6 +240,8 @@ def main():
         inimigo_boss = Nave('inimigos','03', (largura + 1000), (altura/2 - 150), 0.5, player.life, 5000)
         inimigos.append(inimigo_m)
         inimigos.append(inimigo_g)
+        print(f"Inimigos adicionados: {inimigos}")
+        print(f"Lista inimigos: {len(inimigos)}")
 
       if (level%5) == 0:     
         inimigos.append(inimigo_boss)
@@ -215,7 +265,12 @@ def main():
       
       inimigo.draw()
 
+    if player.life <= 0:
+      mensagem_tela('Você MORREU!', red)
+
     for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+        pygame.quit()
 
       # botões pressionados
       if event.type == pygame.QUIT:
@@ -252,6 +307,7 @@ def main():
     # mostra informações na tela
     status_tela(f'Vida: {player.life}', red, 50, 50)
     status_tela(f'Level: {level}', green, 50, 75)
+    status_tela(f'Pontuação: {pontos}', white, largura - 350, 75)
     if troca:
       status_tela(f'Arma: Canhão', orange, largura - 350, 50)
     if not troca:
@@ -261,6 +317,6 @@ def main():
 
     pygame.display.update()
 
-main()
+main_menu()
 pygame.quit()
 quit() 
