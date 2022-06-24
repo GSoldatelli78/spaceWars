@@ -56,6 +56,7 @@ troca = False
 
 bonusLaser_dmg = 0
 bonusCanhao_dmg = 0
+cd_mod = 0
 laserCooldown = 0
 canhaoCooldowm = 0
 
@@ -63,7 +64,6 @@ inimigos = []
 level = 0
 wave_length = 0
 pontos = 0
-
 
 class Nave(pygame.sprite.Sprite):
   def __init__(self, char_type, img_number, x, y, speed, dmg, life):
@@ -104,13 +104,13 @@ class Nave(pygame.sprite.Sprite):
 
   def shoot(self):
     if self.canhao_cooldown == 0 and troca:
-      self.canhao_cooldown = 500
-      self.shoot_dmg = 15 + bonusCanhao_dmg
+      self.canhao_cooldown = 300
+      self.shoot_dmg = 25 + bonusCanhao_dmg
       pygame.mixer.Sound.play(som_canhao)
       tiro = Tiro((self.rect.centerx + self.rect.size[0] * 0.7), self.rect.centery)
       tiro_group.add(tiro)
     elif self.laser_cooldown == 0 and not troca:
-      self.laser_cooldown = 15
+      self.laser_cooldown = 20 - cd_mod
       self.shoot_dmg = 25 + bonusLaser_dmg
       pygame.mixer.Sound.play(som_laser)
       tiro = Tiro((self.rect.centerx + self.rect.size[0] * 0.7), self.rect.centery)
@@ -162,8 +162,8 @@ class Tiro(pygame.sprite.Sprite):
           inimigos.remove(inimigo)
           pontos += 1
           # concede um bonus por abate
-          bonusLaser_dmg += 2 
-          bonusCanhao_dmg += 10
+          bonusLaser_dmg += 1 
+          bonusCanhao_dmg += 15
 
 def status_tela(mensagem, cor, x, y):
   global texto_status
@@ -262,6 +262,7 @@ def main():
   global level
   global wave_length
   global pontos
+  global cd_mod
 
 # FPS
   FPS = 60
@@ -290,6 +291,7 @@ def main():
       level += 1
       wave_length += 1
       player.life += 25
+      pontos += 10
       for i in range(wave_length):
         inimigo_m = Nave('inimigos','01', (random.randrange(largura + 750, largura + 1250)), (random.randrange(45, altura - 55)), 3, 30, 100)
         inimigo_g = Nave('inimigos','02', (random.randrange(largura + 50, largura + 550)), (random.randrange(55, altura - 55)), 1, 50, 200)
@@ -300,12 +302,16 @@ def main():
         print(f"Lista inimigos: {len(inimigos)}")
 
       if (level%5) == 0:     
-        inimigo_boss.life += 500
+        inimigo_boss.life += 1500
         inimigos.append(inimigo_boss)
 
-      if (level%3) == 0:
-        inimigo_m.life += 100
-        inimigo_g.life += 150
+      if (level%2) == 0:
+        inimigo_m.life += 25
+        inimigo_g.life += 100
+        cd_mod += 1
+
+      if level == (6, 11, 16, 21, 26, 31):
+        pontos += 100
 
     for inimigo in inimigos:
       inimigo.rect.centerx -= inimigo.speed
